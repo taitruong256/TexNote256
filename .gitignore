@@ -1,0 +1,8 @@
+.venv
+.vscode
+*.sqlite3
+*.db
+*.pyc
+__pycache__
+media
+latex

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<article>
+  <h2>{{ post.title }}</h2>
+  <div class="post-content">
+    {{ html_content|safe }}
+  </div>
+  {% if images %}
+    <div class="mb-3">
+      <h5>Ảnh đính kèm:</h5>
+      {% for img in images %}
+        <img src="{{ MEDIA_URL }}{{ img }}" class="img-fluid mb-2" style="max-width:400px; display:block;"/>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <hr>
+  <a href="/">← Quay lại danh sách</a>
+</article>
+{% endblock %}
