@@ -1,10 +1,33 @@
 {% extends 'base.html' %}
 {% block content %}
 <h2>Viết bài mới</h2>
-<form method="post">
+<form method="post" enctype="multipart/form-data">
   {% csrf_token %}
   {{ form.as_p }}
+  <div class="mb-3">
+    <label for="latexPreview" class="form-label">Xem trước nội dung LaTeX</label>
+    <div id="latexPreview" class="p-3 bg-white border rounded" style="min-height:150px;"></div>
+  </div>
   <button type="submit" class="btn btn-success">Đăng bài</button>
   <a href="/" class="btn btn-secondary">Hủy</a>
 </form>
+<script>
+function renderLatexPreview() {
+  const latex = document.querySelector('#id_content').value;
+  fetch('{% url 'latex_render_html' %}', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRFToken': '{{ csrf_token }}'
+    },
+    body: 'latex=' + encodeURIComponent(latex)
+  })
+  .then(res => res.json())
+  .then(data => {
+    document.querySelector('#latexPreview').innerHTML = data.html;
+  });
+}
+document.querySelector('#id_content').addEventListener('input', renderLatexPreview);
+document.addEventListener('DOMContentLoaded', renderLatexPreview);
+</script>
 {% endblock %}

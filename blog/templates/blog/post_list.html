@@ -1,29 +1,31 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="row align-items-center mb-4">
-  <div class="col-md-8">
-    <h1 class="display-4">TeXNote256 Blog</h1>
-    <p class="slogan">Better to try than to leave it blank. Never say “I can’t” if you haven’t even tried.</p>
-    <a href="{% url 'post_create' %}" class="btn btn-primary me-2">Viết bài mới</a>
-    <a href="{% url 'latex_editor' %}" class="btn btn-outline-info">Soạn thảo LaTeX nâng cao</a>
-  </div>
-  <div class="col-md-4 text-end d-none d-md-block">
-    <img src="https://latex.codecogs.com/svg.image?\LaTeX" alt="LaTeX Logo" style="max-height:60px;">
+<div class="container py-4">
+  <div class="row">
+    {% for post in posts %}
+    <div class="col-md-4 mb-4">
+      <a href="{% url 'post_detail' post.id %}" style="text-decoration:none;color:inherit;">
+      <div class="card h-100 shadow-sm post-card-hover">
+        {% if post.image_url %}
+        <img src="{{ post.image_url }}" class="card-img-top" style="height:180px;object-fit:cover;" alt="...">
+        {% else %}
+        <div style="height:180px;background:#eee;"></div>
+        {% endif %}
+        <div class="card-body">
+          <h5 class="card-title">{{ post.title|truncatechars:50 }}</h5>
+          <p><b>Author:</b> {% if post.author %}<a href="{% url 'user_profile' post.author.username %}" onclick="event.stopPropagation();">{{ post.author.get_full_name|default:post.author.username }}</a>{% else %}<span class="text-muted">(Ẩn danh)</span>{% endif %}</p>
+          <p><b>Description:</b> {{ post.content|truncatechars:120 }}</p>
+        </div>
+        <div class="card-footer bg-white border-0">
+          <span class="fw-bold">Views: {{ post.views }}</span>
+        </div>
+      </div>
+      </a>
+    </div>
+    {% endfor %}
   </div>
 </div>
-<hr>
-<ul class="list-group mb-4">
-  {% for post in posts %}
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-      <div>
-        <a href="{% url 'post_detail' post.pk %}" class="fw-bold">{{ post.title }}</a>
-        <br>
-        <small class="text-muted">Đăng lúc: {{ post.created_at|date:'d/m/Y H:i' }}</small>
-      </div>
-      <a href="{% url 'post_detail' post.pk %}" class="btn btn-sm btn-outline-secondary">Xem</a>
-    </li>
-  {% empty %}
-    <li class="list-group-item">Chưa có bài viết nào.</li>
-  {% endfor %}
-</ul>
+<style>
+.post-card-hover:hover { box-shadow: 0 4px 24px rgba(0,0,0,0.13); transform: translateY(-2px) scale(1.01); transition: 0.2s; }
+</style>
 {% endblock %}

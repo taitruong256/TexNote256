@@ -1,0 +1,14 @@
+{% extends 'blog/register_base.html' %}
+{% block content %}
+<div>
+  <h2 class="mb-4 text-center">Đăng ký tài khoản</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success w-100">Đăng ký</button>
+  </form>
+  <div class="mt-3 text-center">
+    <a href="{% url 'login' %}">Đã có tài khoản? Đăng nhập</a>
+  </div>
+</div>
+{% endblock %}

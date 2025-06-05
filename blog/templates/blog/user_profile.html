@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">Bài viết của {{ profile_user.get_full_name|default:profile_user.username }}</h2>
+  <div class="row">
+    {% for post in posts %}
+    <div class="col-md-4 mb-4">
+      <a href="{% url 'post_detail' post.id %}" style="text-decoration:none;color:inherit;">
+      <div class="card h-100 shadow-sm post-card-hover">
+        {% if post.image_url %}
+        <img src="{{ post.image_url }}" class="card-img-top" style="height:180px;object-fit:cover;" alt="...">
+        {% else %}
+        <div style="height:180px;background:#eee;"></div>
+        {% endif %}
+        <div class="card-body">
+          <h5 class="card-title">{{ post.title|truncatechars:50 }}</h5>
+          <p><b>Description:</b> {{ post.content|truncatechars:120 }}</p>
+        </div>
+        <div class="card-footer bg-white border-0">
+          <span class="fw-bold">Views: {{ post.views }}</span>
+        </div>
+      </div>
+      </a>
+    </div>
+    {% empty %}
+    <div class="col-12"><p>Chưa có bài viết nào.</p></div>
+    {% endfor %}
+  </div>
+</div>
+<style>
+.post-card-hover:hover { box-shadow: 0 4px 24px rgba(0,0,0,0.13); transform: translateY(-2px) scale(1.01); transition: 0.2s; }
+</style>
+{% endblock %}
