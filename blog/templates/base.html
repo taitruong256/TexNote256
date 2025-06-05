@@ -63,11 +63,11 @@ div.figure { text-align: center !important; }
                 Xin chào {{ user.get_full_name|default:user.username }}
               </a>
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                <li><a class="dropdown-item" href="{% url 'user_profile' user.username %}">Trang cá nhân</a></li>
-                <li><a class="dropdown-item" href="{% url 'post_create' %}">Thêm bài viết</a></li>
                 {% if user.is_staff or user.is_superuser %}
                 <li><a class="dropdown-item" href="/admin/">Quản trị</a></li>
                 {% endif %}
+                <li><a class="dropdown-item" href="{% url 'user_profile' user.username %}">Trang cá nhân</a></li>
+                <li><a class="dropdown-item" href="{% url 'post_create' %}">Thêm bài viết</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
                   <form action="{% url 'logout' %}" method="post" style="display:inline;">
