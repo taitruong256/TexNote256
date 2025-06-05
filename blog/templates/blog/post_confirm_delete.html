@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+  <h2>Xác nhận xóa bài viết</h2>
+  <div class="alert alert-danger">Bạn có chắc chắn muốn xóa bài viết <b>{{ post.title }}</b> không? Hành động này không thể hoàn tác.</div>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Xóa</button>
+    <a href="{% url 'post_detail' post.id %}" class="btn btn-secondary">Hủy</a>
+  </form>
+</div>
+{% endblock %}

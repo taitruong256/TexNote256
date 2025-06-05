@@ -2,6 +2,7 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from . import views
+from .views_post_edit_delete import post_edit, post_delete
 
 urlpatterns = [
     path('', views.post_list, name='post_list'),  
@@ -17,4 +18,9 @@ urlpatterns = [
     path('latex/save_file/', login_required(views.latex_save_file), name='latex_save_file'),
     path('latex/upload_image/', login_required(views.latex_upload_image), name='latex_upload_image'),
     path('latex/render_html/', login_required(views.latex_render_html), name='latex_render_html'),
+]
+
+urlpatterns += [
+    path('post/<int:pk>/edit/', login_required(post_edit), name='post_edit'),
+    path('post/<int:pk>/delete/', login_required(post_delete), name='post_delete'),
 ]
