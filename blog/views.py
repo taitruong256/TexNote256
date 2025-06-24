@@ -41,26 +41,26 @@ def post_detail(request, pk):
 
 def post_create(request):
     if request.method == 'POST':
-        form = PostForm(request.POST, request.FILES)
-        if form.is_valid():
-            post = form.save(commit=False)
-            if request.user.is_authenticated:
-                post.author = request.user
-            post.save()
-            # Tạo thư mục theo id bài viết
-            upload_dir = os.path.join(settings.MEDIA_ROOT, 'uploads', f'post_{post.id}')
-            os.makedirs(upload_dir, exist_ok=True)
-            # Lưu ảnh nếu có
-            image = form.cleaned_data.get('image')
-            if image:
-                img_path = os.path.join(upload_dir, image.name)
-                with default_storage.open(img_path, 'wb+') as destination:
-                    for chunk in image.chunks():
-                        destination.write(chunk)
-            return redirect('post_detail', pk=post.id)
-    else:
-        form = PostForm()
-    return render(request, 'blog/post_form.html', {'form': form})
+        title = request.POST.get('title')
+        if title:
+            # Không dùng %s trong chuỗi có ký tự % (LaTeX comment), dùng f-string thay thế
+            default_content = (
+                "\\documentclass{article}\n"
+                "\\usepackage{graphicx} % Required for inserting images\n\n"
+                f"\\title{{{title}}}\n"
+                "\\author{}\n\n"
+                "\\begin{document}\n\n"
+                "\\maketitle\n\n"
+                "\\section{Introduction}\n\n"
+                "\\end{document}\n"
+            )
+            post = Post.objects.create(
+                title=title,
+                content=default_content,
+                author=request.user if request.user.is_authenticated else None
+            )
+            return redirect('post_edit', pk=post.id)
+    return render(request, 'blog/post_create.html')
 
 def latex_editor(request):
     # Lấy danh sách file .tex, .png, .jpg trong thư mục latex
@@ -71,42 +71,6 @@ def latex_editor(request):
             files.append(f)
     files.sort()
     return render(request, 'blog/latex_editor.html', {'files': files})
-
-def latex_load_file(request):
-    # AJAX: trả về nội dung file
-    filename = request.GET.get('filename')
-    latex_dir = os.path.join(settings.BASE_DIR, 'latex')
-    file_path = os.path.join(latex_dir, filename)
-    if not os.path.exists(file_path):
-        return JsonResponse({'error': 'File not found'}, status=404)
-    with open(file_path, 'r', encoding='utf-8') as f:
-        content = f.read()
-    return JsonResponse({'content': content})
-
-def latex_save_file(request):
-    # AJAX: lưu nội dung file
-    if request.method == 'POST':
-        filename = request.POST.get('filename')
-        content = request.POST.get('content')
-        latex_dir = os.path.join(settings.BASE_DIR, 'latex')
-        file_path = os.path.join(latex_dir, filename)
-        with open(file_path, 'w', encoding='utf-8') as f:
-            f.write(content)
-        return JsonResponse({'success': True})
-    return JsonResponse({'error': 'Invalid request'}, status=400)
-
-@csrf_exempt
-def latex_upload_image(request):
-    # AJAX: upload ảnh vào thư mục latex
-    if request.method == 'POST' and request.FILES.get('image'):
-        image = request.FILES['image']
-        latex_dir = os.path.join(settings.BASE_DIR, 'latex')
-        img_path = os.path.join(latex_dir, image.name)
-        with open(img_path, 'wb+') as destination:
-            for chunk in image.chunks():
-                destination.write(chunk)
-        return JsonResponse({'success': True, 'filename': image.name})
-    return JsonResponse({'error': 'No image uploaded'}, status=400)
 
 @csrf_exempt
 def latex_render_html(request):
@@ -146,3 +110,31 @@ def register(request):
     else:
         form = UserCreationForm()
     return render(request, 'blog/register.html', {'form': form})
+
+def project_create(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        if name:
+            # Nội dung mặc định
+            default_content = r"""\\documentclass{article}
+\\usepackage{graphicx} % Required for inserting images
+
+\\title{%s}
+\\author{%%(author)s}
+
+\\begin{document}
+
+\\maketitle
+
+\\section{Introduction}
+
+\\end{document}
+""" % name
+            # Tạo post mới với nội dung mặc định
+            post = Post.objects.create(
+                title=name,
+                content=default_content,
+                author=request.user if request.user.is_authenticated else None
+            )
+            return redirect('post_edit', pk=post.id)
+    return render(request, 'blog/project_create.html')

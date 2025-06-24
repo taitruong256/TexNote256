@@ -14,9 +14,6 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     # Overleaf-style editor
     path('latex/', login_required(views.latex_editor), name='latex_editor'),
-    path('latex/load_file/', login_required(views.latex_load_file), name='latex_load_file'),
-    path('latex/save_file/', login_required(views.latex_save_file), name='latex_save_file'),
-    path('latex/upload_image/', login_required(views.latex_upload_image), name='latex_upload_image'),
     path('latex/render_html/', login_required(views.latex_render_html), name='latex_render_html'),
 ]
 

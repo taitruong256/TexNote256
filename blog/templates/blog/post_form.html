@@ -18,7 +18,7 @@
         <div id="latexPreview" class="form-control bg-white border rounded shadow-sm" style="min-height:320px; max-height:60vh; height:60vh; overflow:auto;"></div>
       </div>
     </div>
-    <div class="mt-3">
+    <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
       <button type="submit" class="btn btn-success px-4">{% if edit_mode %}Lưu thay đổi{% else %}Đăng bài{% endif %}</button>
       <a href="{% if edit_mode %}{% url 'post_detail' post.id %}{% else %}/{% endif %}" class="btn btn-secondary px-4">Hủy</a>
     </div>

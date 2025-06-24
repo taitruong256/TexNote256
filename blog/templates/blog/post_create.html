@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4" style="max-width:480px;">
+  <h3 class="mb-3">Tạo bài viết mới</h3>
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="id_title" class="form-label">Tên bài viết</label>
+      <input type="text" name="title" id="id_title" class="form-control" required autofocus maxlength="200">
+    </div>
+    <button type="submit" class="btn btn-success w-100">Tạo bài viết</button>
+  </form>
+</div>
+{% endblock %}

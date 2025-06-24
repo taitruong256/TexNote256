@@ -67,7 +67,7 @@ div.figure { text-align: center !important; }
                 <li><a class="dropdown-item" href="/admin/">Quản trị</a></li>
                 {% endif %}
                 <li><a class="dropdown-item" href="{% url 'user_profile' user.username %}">Trang cá nhân</a></li>
-                <li><a class="dropdown-item" href="{% url 'post_create' %}">Thêm bài viết</a></li>
+                <li><a class="dropdown-item" href="{% url 'post_create' %}">Tạo bài viết mới</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
                   <form action="{% url 'logout' %}" method="post" style="display:inline;">
