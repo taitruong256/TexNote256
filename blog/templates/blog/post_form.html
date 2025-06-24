@@ -1,47 +1,171 @@
 {% extends 'base.html' %}
 {% block content %}
+<div id="saveMessage" class="alert alert-success py-2 px-3 mb-2" style="display:none;font-size:1rem;position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;min-width:300px;max-width:90vw;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+  Đã lưu bài viết thành công!
+</div>
 <div class="container-fluid px-2">
-  <form method="post" id="postForm">
-    {% csrf_token %}
-    <div class="mb-2">
-      <label for="id_title" class="form-label fw-semibold" style="font-size:1.1rem;">Tiêu đề</label>
-      <input type="text" name="title" maxlength="5000" class="form-control form-control-sm" id="id_title" required value="{{ form.title.value|default_if_none:'' }}" style="font-size:1.05rem; padding:0.4rem 0.7rem;">
-    </div>
-    <div class="row g-2">
-      <div class="col-md-6 col-12">
-        <label for="id_content" class="form-label fw-semibold" style="font-size:1.1rem;">Nội dung LaTeX</label>
-        <textarea name="content" cols="40" rows="15" class="form-control latex-editor" id="id_content" required style="min-height:320px; max-height:60vh; height:60vh; resize:vertical; overflow:auto; font-size:1.05rem;"></textarea>
-        <div class="form-text">Soạn thảo bằng LaTeX, hỗ trợ công thức toán học.</div>
+  <div class="row g-2">
+    <div class="col-lg-2 col-md-3 col-12 mb-2">
+      <label class="form-label fw-semibold" style="font-size:1.1rem;">File liên quan</label>
+      <div class="bg-white border rounded shadow-sm p-2" style="min-height:320px; max-height:60vh; height:60vh; overflow:auto;">
+        {% if related_files %}
+          <ul class="list-group list-group-flush" id="fileList">
+            {% for f in related_files %}
+              <li class="list-group-item py-1 px-2 file-item" data-filename="{{ f }}" style="font-size:0.98rem; cursor:pointer;">{{ f }}</li>
+            {% endfor %}
+          </ul>
+          <div id="filePreview" class="mt-2"></div>
+        {% else %}
+          <div class="text-muted">Chưa có file liên quan</div>
+        {% endif %}
+        <form id="uploadForm" enctype="multipart/form-data" method="post" action="{% url 'latex_upload_image' %}" class="mt-2">
+          {% csrf_token %}
+          <input type="file" name="image" accept=".tex,image/*" class="form-control form-control-sm mb-1">
+          <input type="hidden" name="post_id" value="{{ post.id }}">
+        </form>
       </div>
-      <div class="col-md-6 col-12">
-        <label class="form-label fw-semibold" style="font-size:1.1rem;">Xem trước nội dung (HTML)</label>
-        <div id="latexPreview" class="form-control bg-white border rounded shadow-sm" style="min-height:320px; max-height:60vh; height:60vh; overflow:auto;"></div>
-      </div>
     </div>
-    <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
-      <button type="submit" class="btn btn-success px-4">{% if edit_mode %}Lưu thay đổi{% else %}Đăng bài{% endif %}</button>
-      <a href="{% if edit_mode %}{% url 'post_detail' post.id %}{% else %}/{% endif %}" class="btn btn-secondary px-4">Hủy</a>
+    <div class="col-lg-10 col-md-9 col-12 mb-2">
+      <form method="post" id="postForm">
+        {% csrf_token %}
+        <div class="mb-2">
+          <label for="id_title" class="form-label fw-semibold" style="font-size:1.1rem;">Tiêu đề</label>
+          <input type="text" name="title" maxlength="5000" class="form-control form-control-sm" id="id_title" required value="{{ form.title.value|default_if_none:'' }}" style="font-size:1.05rem; padding:0.4rem 0.7rem;">
+        </div>
+        <div class="row g-2">
+          <div class="col-lg-6 col-md-7 col-12 mb-2">
+            <label for="id_content" class="form-label fw-semibold" style="font-size:1.1rem;">Nội dung LaTeX</label>
+            <textarea name="content" cols="40" rows="15" class="form-control latex-editor" id="id_content" required style="min-height:320px; max-height:60vh; height:60vh; resize:vertical; overflow:auto; font-size:1.05rem;">{{ form.content.value|default_if_none:'' }}</textarea>
+            <div class="form-text">Soạn thảo bằng LaTeX, hỗ trợ công thức toán học.</div>
+          </div>
+          <div class="col-lg-6 col-md-5 col-12 mb-2">
+            <label class="form-label fw-semibold" style="font-size:1.1rem;">Xem trước nội dung (HTML)</label>
+            <div id="latexPreview" class="form-control bg-white border rounded shadow-sm" style="min-height:320px; max-height:60vh; height:60vh; overflow:auto;"></div>
+          </div>
+        </div>
+        <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
+          <button type="submit" class="btn btn-success px-4" name="save">{% if edit_mode %}Lưu thay đổi{% else %}Đăng bài{% endif %}</button>
+          <button type="submit" class="btn btn-primary px-4" name="save_continue">Lưu và tiếp tục chỉnh sửa</button>
+          <a href="{% if edit_mode %}{% url 'post_detail' post.id %}{% else %}/{% endif %}" class="btn btn-secondary px-4">Hủy</a>
+        </div>
+      </form>
     </div>
-  </form>
+  </div>
 </div>
 <script>
+$(document).on('click', '.file-item', function() {
+    var filename = $(this).data('filename');
+    var postId = $('#uploadForm input[name="post_id"]').val();
+    var ext = filename.split('.').pop().toLowerCase();
+    if(['png','jpg','jpeg','gif','bmp','webp'].includes(ext)) {
+        // Khi chọn ảnh: xóa hết code LaTeX cũ, chỉ giữ lại mã chèn ảnh với tên file
+        var imgLatex = '\\includegraphics[width=0.9\\linewidth]{' + filename + '}';
+        var textarea = $('#id_content');
+        textarea.val(imgLatex).trigger('input');
+        textarea[0].selectionStart = textarea[0].selectionEnd = imgLatex.length;
+        textarea.focus();
+        renderLatexPreview();
+    } else if(ext === 'tex') {
+        // Lấy nội dung file .tex qua API, chèn vào textarea và render preview
+        $.get('/api/post/' + postId + '/file/?filename=' + encodeURIComponent(filename), function(data) {
+            $('#id_content').val(data.content).trigger('input');
+            renderLatexPreview();
+        });
+    } else {
+        alert('Không hỗ trợ xem trước file này.');
+    }
+});
+
 function renderLatexPreview() {
   const latex = document.querySelector('#id_content').value;
+  const postId = $('#uploadForm input[name="post_id"]').val();
   fetch('{% url 'latex_render_html' %}', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       'X-CSRFToken': '{{ csrf_token }}'
     },
-    body: 'latex=' + encodeURIComponent(latex)
+    body: 'latex=' + encodeURIComponent(latex) + '&post_id=' + encodeURIComponent(postId)
   })
   .then(res => res.json())
   .then(data => {
     document.querySelector('#latexPreview').innerHTML = data.html;
   });
 }
+
 document.querySelector('#id_content').addEventListener('input', renderLatexPreview);
 document.addEventListener('DOMContentLoaded', renderLatexPreview);
+
+// Xử lý upload file bằng AJAX
+$('#uploadForm input[type="file"]').on('change', function() {
+    $('#uploadForm').submit();
+});
+
+$('#uploadForm').on('submit', function(e) {
+    e.preventDefault();
+    var formData = new FormData(this);
+    $.ajax({
+        url: $(this).attr('action'),
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            fetchFileList();
+            // Reset input file để có thể upload lại cùng tên file nếu muốn
+            $('#uploadForm input[type="file"]').val('');
+        },
+        error: function() {
+            alert('Upload thất bại!');
+        }
+    });
+});
+
+function fetchFileList() {
+    var postId = $('#uploadForm input[name="post_id"]').val();
+    $.get('/api/post/' + postId + '/files/', function(data) {
+        var fileList = $('#fileList');
+        fileList.empty();
+        data.files.forEach(function(file) {
+            // Đảm bảo thêm lại class file-item và data-filename để JS click hoạt động
+            fileList.append('<li class="list-group-item py-1 px-2 file-item" data-filename="' + file + '" style="font-size:0.98rem; cursor:pointer;">' + file + '</li>');
+        });
+    });
+}
+
+// Xử lý click vào file để xem nội dung
+$(document).on('click', '.file-item', function() {
+    var filename = $(this).data('filename');
+    var postId = $('#uploadForm input[name="post_id"]').val();
+    var ext = filename.split('.').pop().toLowerCase();
+    if(['png','jpg','jpeg','gif','bmp','webp'].includes(ext)) {
+        // Khi chọn ảnh: xóa hết code LaTeX cũ, chỉ giữ lại mã chèn ảnh với tên file
+        var imgLatex = '\\includegraphics[width=0.9\\linewidth]{' + filename + '}';
+        var textarea = $('#id_content');
+        textarea.val(imgLatex).trigger('input');
+        textarea[0].selectionStart = textarea[0].selectionEnd = imgLatex.length;
+        textarea.focus();
+        renderLatexPreview();
+    } else if(ext === 'tex') {
+        // Lấy nội dung file .tex qua API, chèn vào textarea và render preview
+        $.get('/api/post/' + postId + '/file/?filename=' + encodeURIComponent(filename), function(data) {
+            $('#id_content').val(data.content).trigger('input');
+            renderLatexPreview();
+        });
+    } else {
+        alert('Không hỗ trợ xem trước file này.');
+    }
+});
+
+// Hiển thị thông báo đã lưu thành công nếu có message từ backend
+$(document).ready(function() {
+    {% if message %}
+    $('#saveMessage').fadeIn(200);
+    setTimeout(function() {
+        $('#saveMessage').fadeOut(400);
+    }, 3000);
+    {% endif %}
+});
 </script>
 <style>
 .latex-editor {
@@ -66,8 +190,8 @@ document.addEventListener('DOMContentLoaded', renderLatexPreview);
   border: 1px solid #ced4da;
   padding: 0.7rem;
 }
-@media (max-width: 767px) {
-  .col-md-6 { width: 100%; }
+@media (max-width: 991px) {
+  .col-lg-2, .col-lg-5, .col-lg-4, .col-lg-10, .col-lg-6 { width: 100%; max-width: 100%; }
   #latexPreview, .latex-editor { max-height: 40vh; height: 40vh; }
 }
 </style>

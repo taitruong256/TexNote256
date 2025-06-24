@@ -5,15 +5,6 @@
   <div class="post-content">
     {{ html_content|safe }}
   </div>
-  {% if images %}
-    <div class="mb-3">
-      <h5>Ảnh đính kèm:</h5>
-      {% for img in images %}
-        <img src="{{ MEDIA_URL }}{{ img }}" class="img-fluid mb-2" style="max-width:400px; display:block;"/>
-      {% endfor %}
-    </div>
-  {% endif %}
-  <hr>
   {% if user.is_authenticated and user == post.author %}
     <div class="mb-3">
       <a href="{% url 'post_edit' post.id %}" class="btn btn-primary me-2">Sửa bài</a>
