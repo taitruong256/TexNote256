@@ -12,6 +12,9 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     views = models.PositiveIntegerField(default=0)
+    public = models.BooleanField(default=False)
+    thumbnail = models.ImageField(upload_to='thumbnails/', null=True, blank=True, default=None, help_text="Ảnh đại diện bài viết")
+    excerpt = models.CharField(max_length=300, blank=True, default="", help_text="Mô tả ngắn gọn bài viết")
 
     def __str__(self):
         return self.title
@@ -20,13 +23,13 @@ class Post(models.Model):
         # Thư mục lưu ảnh theo id bài viết
         return os.path.join('uploads', f'post_{self.id}')
 
-    def image_url(self):
-        # Trả về url ảnh đầu tiên trong thư mục uploads/post_{id} nếu có
-        import os
-        from django.conf import settings
-        img_dir = os.path.join(settings.MEDIA_ROOT, 'uploads', f'post_{self.id}')
-        if os.path.exists(img_dir):
-            for f in os.listdir(img_dir):
-                if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                    return settings.MEDIA_URL + f'uploads/post_{self.id}/' + f
+    @property
+    def thumbnail_url(self):
+        if self.thumbnail:
+            return self.thumbnail.url
+        return None
+
+    def get_thumbnail_display_url(self):
+        if self.thumbnail:
+            return self.thumbnail.url
         return None

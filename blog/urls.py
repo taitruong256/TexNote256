@@ -13,7 +13,6 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('register/', views.register, name='register'),
     
-    # Overleaf-style editor
     path('latex/', login_required(views.latex_editor), name='latex_editor'),
     path('latex/render_html/', login_required(views.latex_render_html), name='latex_render_html'),
     path('latex/upload_image/', login_required(views.latex_upload_image), name='latex_upload_image'),

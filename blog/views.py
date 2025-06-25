@@ -14,6 +14,9 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.http import HttpResponseForbidden
 from django.views.decorators.http import require_GET
+from PIL import Image
+from io import BytesIO
+from django.core.files.base import ContentFile
 
 def post_list(request):
     posts = Post.objects.select_related('author').order_by('-created_at')
@@ -170,7 +173,31 @@ def post_edit(request, pk):
     if request.method == 'POST':
         form = PostForm(request.POST, request.FILES, instance=post)
         if form.is_valid():
-            post = form.save()
+            post = form.save(commit=False)
+            # Xử lý thumbnail nếu có upload mới
+            thumbnail_file = request.FILES.get('thumbnail')
+            if thumbnail_file:
+                image = Image.open(thumbnail_file)
+                # Resize về chiều rộng 150px, giữ tỉ lệ
+                w, h = image.size
+                new_w = 150
+                new_h = int(h * (new_w / w))
+                image = image.resize((new_w, new_h), Image.LANCZOS)
+                # Nếu chiều cao > 100px, crop lấy 100px ở giữa
+                if new_h > 100:
+                    top = (new_h - 100) // 2
+                    image = image.crop((0, top, 150, top + 100))
+                # Nếu chiều cao < 100px, căn giữa trên nền trắng
+                elif new_h < 100:
+                    bg = Image.new('RGBA' if image.mode == 'RGBA' else 'RGB', (150, 100), (255, 255, 255, 0) if image.mode == 'RGBA' else (255,255,255))
+                    bg.paste(image, (0, (100 - new_h) // 2))
+                    image = bg
+                # Lưu lại vào thumbnail
+                thumb_io = BytesIO()
+                image_format = 'PNG' if image.mode == 'RGBA' else 'JPEG'
+                image.save(thumb_io, format=image_format)
+                post.thumbnail.save(thumbnail_file.name, ContentFile(thumb_io.getvalue()), save=False)
+            post.save()
             os.makedirs(os.path.dirname(main_tex_path), exist_ok=True)
             with open(main_tex_path, 'w', encoding='utf-8') as f:
                 f.write(post.content)
