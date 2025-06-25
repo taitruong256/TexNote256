@@ -5,6 +5,14 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 
+class Topic(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=120, unique=True)
+    description = models.CharField(max_length=300, blank=True, default="")
+
+    def __str__(self):
+        return self.name
+
 class Post(models.Model):
     title = models.CharField(max_length=5000)
     content = models.TextField(help_text="Soạn thảo bằng LaTeX")
@@ -15,6 +23,7 @@ class Post(models.Model):
     public = models.BooleanField(default=False)
     thumbnail = models.ImageField(upload_to='thumbnails/', null=True, blank=True, default=None, help_text="Ảnh đại diện bài viết")
     excerpt = models.CharField(max_length=300, blank=True, default="", help_text="Mô tả ngắn gọn bài viết")
+    topics = models.ManyToManyField(Topic, related_name='posts', blank=True, help_text="Các chủ đề liên quan")
 
     def __str__(self):
         return self.title

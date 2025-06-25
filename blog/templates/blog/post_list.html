@@ -1,6 +1,17 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container py-4">
+  {% if topics %}
+  <div class="mb-4">
+    <div class="fw-bold mb-2" style="font-size:1.1rem;">Chủ đề:</div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{% url 'post_list' %}" class="badge {% if not selected_topic %}bg-primary text-white{% else %}bg-light text-dark border{% endif %}" style="font-size:1rem; padding:0.6em 1.1em; text-decoration:none;">Tất cả</a>
+      {% for topic in topics %}
+        <a href="?topic={{ topic.slug }}" class="badge {% if selected_topic == topic.slug %}bg-primary text-white{% else %}bg-light text-dark border{% endif %}" style="font-size:1rem; padding:0.6em 1.1em; text-decoration:none;">{{ topic.name }}</a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
   {% for post in posts %}
   <div class="d-flex align-items-start py-3 border-bottom post-list-item">
     {% if post.thumbnail_url %}
@@ -14,6 +25,11 @@
       <div class="d-flex justify-content-between align-items-center">
         <a href="{% url 'post_detail' post.id %}" class="post-title-link" style="font-size:1.3rem;font-weight:600;color:#1976d2;text-decoration:none;">{{ post.title }}</a>
         <span class="text-muted" style="font-size:0.95rem;">{{ post.created_at|date:'M d, Y' }}</span>
+      </div>
+      <div class="mb-1">
+        {% for topic in post.topics.all %}
+          <a href="?topic={{ topic.slug }}" class="badge bg-info text-dark me-1" style="font-size:0.95em;">{{ topic.name }}</a>
+        {% endfor %}
       </div>
       <div class="mt-1 mb-2 text-secondary" style="font-size:1rem;">
         {{ post.excerpt|default_if_none:""|linebreaksbr }}

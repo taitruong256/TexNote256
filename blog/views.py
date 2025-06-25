@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Post
+from .models import Post, Topic
 from .forms import PostForm
 import pypandoc
 import os
@@ -19,8 +19,12 @@ from io import BytesIO
 from django.core.files.base import ContentFile
 
 def post_list(request):
-    posts = Post.objects.select_related('author').order_by('-created_at')
-    return render(request, 'blog/post_list.html', {'posts': posts})
+    topic_slug = request.GET.get('topic')
+    topics = Topic.objects.all().order_by('name')
+    posts = Post.objects.select_related('author').prefetch_related('topics').order_by('-created_at')
+    if topic_slug:
+        posts = posts.filter(topics__slug=topic_slug)
+    return render(request, 'blog/post_list.html', {'posts': posts, 'topics': topics, 'selected_topic': topic_slug})
 
 def user_profile(request, username):
     user = get_object_or_404(User, username=username)
@@ -271,3 +275,9 @@ def api_post_file_content(request, pk):
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
     return JsonResponse({'content': content})
+
+def topic_posts(request, slug):
+    topics = Topic.objects.all().order_by('name')
+    topic = get_object_or_404(Topic, slug=slug)
+    posts = topic.posts.select_related('author').prefetch_related('topics').order_by('-created_at')
+    return render(request, 'blog/post_list.html', {'posts': posts, 'topics': topics, 'selected_topic': slug, 'current_topic': topic})
